@@ -80,10 +80,10 @@ Then:
 		#define STATIC_IF_SANDBOXED
 	#endif
 
-	#define heaps_alloc(size) 		heaps_alloc_(size, __FILE__, __LINE__);
-	#define heaps_free(ptr)			heaps_free_(ptr, __FILE__, __LINE__);
-	#define heaps_realloc(ptr,size)	heaps_realloc_(ptr, size, __FILE__, __LINE__);
-	#define heaps_calloc(qty,size)	heaps_calloc_(qty, size, __FILE__, __LINE__);
+	#define heaps_alloc(size) 		heaps_alloc_(size, __FILE__, __LINE__)
+	#define heaps_free(ptr)			heaps_free_(ptr, __FILE__, __LINE__)
+	#define heaps_realloc(ptr,size)	heaps_realloc_(ptr, size, __FILE__, __LINE__)
+	#define heaps_calloc(qty,size)	heaps_calloc_(qty, size, __FILE__, __LINE__)
 
 	typedef struct heaps_t
 	{
