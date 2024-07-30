@@ -40,6 +40,7 @@
     TEST test_track_headroom(void);
     TEST test_track_peak_allocation_count(void);
     TEST test_calloc(void);
+    TEST test_realloc(void);
     TEST test_reports(void);
 
 
@@ -76,6 +77,7 @@ SUITE(suite_all_tests)
     RUN_TEST(test_track_headroom);
     RUN_TEST(test_track_peak_allocation_count);
     RUN_TEST(test_calloc);
+    RUN_TEST(test_realloc);
     RUN_TEST(test_reports);
 }
 
@@ -105,7 +107,7 @@ TEST test_gen_linked_list(void)
     ptr = ptr->next;
     ASSERT_EQ(old_head, ptr);
 
-//  remove the middle allcoation, and re-test the list is what it should be
+//  remove the middle allocation, and re-test the list is what it should be
     heaps_free(b);
     ptr = heaps_get_allocation_list();
     ASSERT(ptr);
@@ -249,6 +251,30 @@ TEST test_calloc(void)
     uint8_t* buf = heaps_calloc(100, 2);
     ASSERT(!memcmp(buf, zeros, 200));
     heaps_free(buf);
+    PASS();
+}
+
+TEST test_realloc(void)
+{
+    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    void* ptr = heaps_realloc(NULL, 50);    //allocate
+    ASSERT(ptr);
+    ASSERT_STR_EQ("", err_info.file);
+    ASSERT_EQ(0, err_info.line);
+    ASSERT_STR_EQ("", err_info.msg);
+
+    ptr = heaps_realloc(ptr, 100);    //reallocate
+    ASSERT(ptr);
+    ASSERT_STR_EQ("", err_info.file);
+    ASSERT_EQ(0, err_info.line);
+    ASSERT_STR_EQ("", err_info.msg);
+
+    ptr = heaps_realloc(ptr, 0);      //free
+    ASSERT_EQ(NULL, ptr);
+    ASSERT_STR_EQ("", err_info.file);
+    ASSERT_EQ(0, err_info.line);
+    ASSERT_STR_EQ("", err_info.msg);
+
     PASS();
 }
 
