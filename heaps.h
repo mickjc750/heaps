@@ -30,12 +30,14 @@ If available, a heap integrity test which returns true if the heap is ok:
 If available, a function or macro which gives the size of the largest allocation which can currently be made:
 		size_t heaps_platform_largest_free()
 
+If you need locking for thread safety, provide:
+		heaps_platform_lock()
+		heaps_platform_unlock()
 
 The behaviour of realloc(ptr, 0) is implementation defined.
 The default behaviour expected (and that of glibc) is that realloc(ptr,0) will free ptr and return NULL.
-If the realloc() in use doesn't free memory when given a size of 0, then define this symbol:
-		#define HEAPS_REALLOC_ZERO_DOESNT_FREE.
-
+If the realloc() in use doesn't free memory when given a size of 0, then define this symbol:	
+		#define HEAPS_REALLOC_ZERO_DOESNT_FREE
 
 By default heaps will walk the list of existing allocations before each alloc/free operation as a partial integrity test.
 If you do not want this to happen (due to the performance hit), then define the symbol:
@@ -160,6 +162,12 @@ Then:
 	#ifndef heaps_platform_largest_free
 		#define heaps_platform_largest_free() (0)
 	#endif
+	#ifndef heaps_platform_lock
+		#define heaps_platform_lock() ((void)0)
+	#endif
+	#ifndef heaps_platform_unlock
+		#define heaps_platform_unlock() ((void)0)
+	#endif
 
 //********************************************************************************************************
 // Private variables
@@ -202,35 +210,55 @@ Then:
 #ifdef heaps_platform_alloc
 STATIC_IF_SANDBOXED void* heaps_alloc_(size_t size, const char* file, int line)
 {
-	return alloc_(size, file, line);
+	void* retval;
+	heaps_platform_lock();
+	retval = alloc_(size, file, line);
+	heaps_platform_unlock();
+	return retval;
 }
 #endif
 
 #ifdef heaps_platform_realloc
 STATIC_IF_SANDBOXED void* heaps_realloc_(void* ptr, size_t size, const char* file, int line)
 {
-	return realloc_(ptr, size, file, line);
+	void* retval;
+	heaps_platform_lock();
+	retval = realloc_(ptr, size, file, line);
+	heaps_platform_unlock();
+	return retval;
 }
 #endif
 
 #ifdef heaps_platform_free
 STATIC_IF_SANDBOXED void* heaps_free_(void* ptr, const char* file, int line)
 {
-	return free_(ptr, file, line);
+	void* retval;
+	heaps_platform_lock();
+	retval = free_(ptr, file, line);
+	heaps_platform_unlock();
+	return retval;
 }
 #endif
 
 #if (defined heaps_platform_alloc || defined heaps_platform_realloc)
 STATIC_IF_SANDBOXED void* heaps_calloc_(size_t qty, size_t size, const char* file, int line)
 {
-	return calloc_(qty, size, file, line);
+	void* retval;
+	heaps_platform_lock();
+	retval = calloc_(qty, size, file, line);
+	heaps_platform_unlock();
+	return retval;
 }
 #endif
 
 #ifdef heaps_platform_realloc
 STATIC_IF_SANDBOXED heaps_report_t* heaps_report(int* arr_size)
 {
-	return report(arr_size);
+	heaps_report_t* retval;
+	heaps_platform_lock();
+	retval = report(arr_size);
+	heaps_platform_unlock();
+	return retval;
 }
 
 STATIC_IF_SANDBOXED int heaps_report_sorter_descending_count(const void* a, const void* b)

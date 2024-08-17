@@ -23,6 +23,13 @@
     } err_info_t;
 
 //********************************************************************************************************
+// Public variables 
+//********************************************************************************************************
+
+    int test_lock_entry_count = 0;
+    int test_lock_exit_count = 0;
+
+//********************************************************************************************************
 // Private variables
 //********************************************************************************************************
 
@@ -42,7 +49,7 @@
     TEST test_calloc(void);
     TEST test_realloc(void);
     TEST test_reports(void);
-
+    TEST test_locking(void);
 
 //********************************************************************************************************
 // Public functions
@@ -79,6 +86,7 @@ SUITE(suite_all_tests)
     RUN_TEST(test_calloc);
     RUN_TEST(test_realloc);
     RUN_TEST(test_reports);
+    RUN_TEST(test_locking);
 }
 
 TEST test_gen_linked_list(void)
@@ -356,5 +364,26 @@ TEST test_reports(void)
 
     heaps_free(arr);
 
+    PASS();
+}
+
+TEST test_locking(void)
+{
+    void *ptr;
+    test_lock_entry_count = 0;
+    test_lock_exit_count = 0;
+    ptr = heaps_alloc(100);
+    ASSERT_EQ(1, test_lock_entry_count);
+    ASSERT_EQ(1, test_lock_exit_count);
+    ptr = heaps_realloc(ptr, 200);
+    ASSERT_EQ(2, test_lock_entry_count);
+    ASSERT_EQ(2, test_lock_exit_count);
+    heaps_free(ptr);
+    ASSERT_EQ(3, test_lock_entry_count);
+    ASSERT_EQ(3, test_lock_exit_count);
+    ptr = heaps_calloc(5, 25);
+    ASSERT_EQ(4, test_lock_entry_count);
+    ASSERT_EQ(4, test_lock_exit_count);
+    heaps_free(ptr);
     PASS();
 }
