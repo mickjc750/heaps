@@ -22,6 +22,11 @@
 //    #include <assert.h>
 //    #define heaps_error_handler(msg,file,line)    __assert_fail(msg,file,line,__ASSERT_FUNCTION)
 
+    extern int test_lock_entry_count;
+    extern int test_lock_exit_count;
+
+    #define heaps_platform_lock()      do{test_lock_entry_count++;}while(0)
+    #define heaps_platform_unlock()      do{test_lock_exit_count++;}while(0)
 
 //  With HEAPS_IMPLEMENTATION defined heaps.h will provide the implementation (all functions)
     #define HEAPS_IMPLEMENTATION
