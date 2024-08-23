@@ -355,7 +355,7 @@ static void* realloc_(void* ptr, size_t size, const char* file, int line)
 		if(to_free == NULL)
 			heaps_error_handler("false free via heaps_realloc()", file, line);
 		else
-			heaps_platform_realloc(to_free, 0);
+			retval = heaps_platform_realloc(to_free, 0);
 	}
 	else if(reallocating)
 	{
