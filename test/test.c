@@ -22,6 +22,8 @@
         int line;
     } err_info_t;
 
+    #define ERR_INFO_NONE ((err_info_t){.file ="", .line=0, .msg=""})
+
 //********************************************************************************************************
 // Public variables 
 //********************************************************************************************************
@@ -33,7 +35,7 @@
 // Private variables
 //********************************************************************************************************
 
-    static err_info_t err_info;
+    static err_info_t err_info = ERR_INFO_NONE;
 
 //********************************************************************************************************
 // Private prototypes
@@ -50,6 +52,7 @@
     TEST test_realloc(void);
     TEST test_reports(void);
     TEST test_locking(void);
+    TEST test_err_on_proliferation_alloc_fail(void);
 
 //********************************************************************************************************
 // Public functions
@@ -87,6 +90,7 @@ SUITE(suite_all_tests)
     RUN_TEST(test_realloc);
     RUN_TEST(test_reports);
     RUN_TEST(test_locking);
+    RUN_TEST(test_err_on_proliferation_alloc_fail);
 }
 
 TEST test_gen_linked_list(void)
@@ -156,7 +160,33 @@ TEST test_err_on_alloc_fail(void)
     ASSERT_STR_EQ("fred likes dogs", err_info.file);
     ASSERT_STR_EQ("allocation failed", err_info.msg);
     ASSERT_EQ(1975, err_info.line);
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
+    PASS();
+}
+
+TEST test_err_on_proliferation_alloc_fail(void)
+{
+    void* a;
+    uint32_t maxcount = MCHEAP_SIZE+1;
+    heaps_t *info;
+
+    do
+    {
+        a = heaps_alloc_(1, "proliferation", 1975);
+    }while(a && maxcount--);
+
+    ASSERT_EQ(NULL, a);
+    ASSERT_STR_EQ("proliferation", err_info.file);
+    ASSERT_STR_EQ("allocation failed", err_info.msg);
+    ASSERT_EQ(1975, err_info.line);
+    err_info = ERR_INFO_NONE;
+
+    do
+    {
+        info = heaps_get_allocation_list();
+        if(info)
+            heaps_free(info->content);
+    }while(info);
     PASS();
 }
 
@@ -170,7 +200,7 @@ TEST test_err_on_realloc_fail(void)
     ASSERT_STR_EQ("bob eats chickens", err_info.file);
     ASSERT_STR_EQ("allocation via heaps_realloc() failed", err_info.msg);
     ASSERT_EQ(1984, err_info.line);
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
 
     a = heaps_alloc(50);
     ASSERT_NEQ(NULL, a);
@@ -179,14 +209,14 @@ TEST test_err_on_realloc_fail(void)
     ASSERT_STR_EQ("turtle broth", err_info.file);
     ASSERT_STR_EQ("heaps_realloc() failed", err_info.msg);
     ASSERT_EQ(2001, err_info.line);
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
 
     b = heaps_realloc_(a + 1, 0, "trying to false free", 2019);
     ASSERT_EQ(NULL, b);
     ASSERT_STR_EQ("trying to false free", err_info.file);
     ASSERT_STR_EQ("false free via heaps_realloc()", err_info.msg);
     ASSERT_EQ(2019, err_info.line);
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
 
     heaps_free(a);
     PASS();
@@ -200,7 +230,7 @@ TEST test_err_on_bad_free(void)
     ASSERT_STR_EQ("trying false free", err_info.file);
     ASSERT_STR_EQ("false free", err_info.msg);
     ASSERT_EQ(1989, err_info.line);
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
     heaps_free(a);
     PASS();
 }
@@ -264,7 +294,7 @@ TEST test_calloc(void)
 
 TEST test_realloc(void)
 {
-    err_info = (err_info_t){.file ="", .line=0, .msg=""};
+    err_info = ERR_INFO_NONE;
     void* ptr = heaps_realloc(NULL, 50);    //allocate
     ASSERT(ptr);
     ASSERT_STR_EQ("", err_info.file);
