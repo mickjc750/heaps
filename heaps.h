@@ -12,7 +12,7 @@ Adding heaps.h to your application.
 In ONE .c file:
 	#define HEAPS_IMPLEMENTATION 
 
-Then provide macros or functions for some selection of the following:
+Then provide macros for some selection of the following (these must be macros, not just functions):
 
 		heaps_platform_alloc(size_t size)		
 		heaps_platform_free(void* ptr)			
@@ -28,7 +28,7 @@ If available, a heap integrity test which returns true if the heap is ok:
 		bool heaps_platform_check(void)
 
 If available, a function or macro which gives the size of the largest allocation which can currently be made:
-		size_t heaps_platform_largest_free()
+		size_t heaps_platform_largest_free(void)
 
 If you need locking for thread safety, provide:
 		heaps_platform_lock()
@@ -157,7 +157,8 @@ Then:
 		#define heaps_platform_check() (true)
 	#endif
 	#ifndef heaps_error_handler
-		#define heaps_error_handler(msg,file,line)	((void)0)
+		#warning heaps is not using an error handler, if this is intentional #define heaps_error_handler(...) ((void)0) to suppress this message.
+		#define heaps_error_handler(...)	((void)0)
 	#endif
 	#ifndef heaps_platform_largest_free
 		#define heaps_platform_largest_free() (0)
@@ -419,6 +420,7 @@ static void* calloc_(size_t qty, size_t size, const char* file, int line)
 
 static void check_heap(const char* file, int line)
 {
+	(void)file;(void)line;
 #ifndef HEAPS_NO_PRE_OPERATION_WALK_CHECK
 	heaps_t *link = head;
 	int count = 0;
